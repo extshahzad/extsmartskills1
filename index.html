@@ -30,6 +30,36 @@ html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
 h1,h2,h3,h4{font-family:'Syne',sans-serif;}
 
+/* DOLLAR ANIMATION Ensure the dollar elements float upwards across the full background */
+.dollar {
+  position: absolute;
+  pointer-events: none; /* Crucial: ensures buttons underneath remain clickable */
+  color: rgba(37, 211, 102, 0.25); /* Subtle brand green with opacity so it stays in the background */
+  font-weight: bold;
+  z-index: 1; /* Keeps them behind your text/buttons but above the background color */
+  animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-20vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+
+
+  
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -892,6 +922,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:3rem 2re
 
 <script>
 // FLOATING DOLLARS
+  /*
 const wrap = document.getElementById('floatWrap');
 const symbols = ['$','£','€','💰','$','£'];
 for(let i=0;i<12;i++){
@@ -904,7 +935,39 @@ for(let i=0;i<12;i++){
   el.style.fontSize=(1+Math.random())+'rem';
   wrap.appendChild(el);
 }
+*/
+  // FLOATING CURRENCIES ACROSS HERO SECTION
+// Target your actual hero section container (change 'hero' to your actual hero ID or class)
+const hero = document.getElementById('hero') || document.querySelector('.hero-section');
 
+if (hero) {
+  // Make sure the hero container can hold absolutely positioned elements
+  hero.style.position = 'relative';
+  hero.style.overflow = 'hidden';
+
+  const symbols = ['$', '£', '€', '💰', '$', '£'];
+  
+  // Increased count to 18 so they fill the larger hero area nicely without overcrowding
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'dollar';
+    el.textContent = symbols[i % symbols.length];
+    
+    // Spread evenly across the entire width
+    el.style.left = Math.random() * 100 + '%';
+    
+    // Start them at random vertical positions so they don't all rise from the bottom at once
+    el.style.top = Math.random() * 100 + '%'; 
+    
+    // Smooth, randomized animation timings
+    el.style.animationDelay = Math.random() * -8 + 's'; // Negative delay prevents them from popping in abruptly
+    el.style.animationDuration = (6 + Math.random() * 6) + 's';
+    el.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+    
+    hero.appendChild(el);
+  }
+}
+  
 // COUNTDOWN
 function startCountdown(){
   let total=8*3600+45*60+30;
