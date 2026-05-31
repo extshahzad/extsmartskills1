@@ -1020,6 +1020,7 @@ function wa(product){
       <div class="check-icon">✅</div>
       <h3>Enrollment Received!</h3>
       <p>Thank you for enrolling. Our team will contact you on WhatsApp within 24 hours to confirm your spot and share payment details.</p>
+      <button class="submit-btn" onclick="resetEnrollForm()" style="margin-top:1.25rem;background:transparent;border:1.5px solid var(--neon);color:var(--neon);">+ Submit Another Entry</button>
     </div>
   </div>
 </div>
@@ -1041,6 +1042,22 @@ function openEnroll(courseName) {
 function closeEnroll() {
   document.getElementById('enrollModal').classList.remove('active');
   document.body.style.overflow = '';
+  resetEnrollForm();
+}
+
+function resetEnrollForm() {
+  document.getElementById('enrName').value = '';
+  document.getElementById('enrCity').value = '';
+  document.getElementById('enrWA').value = '';
+  document.querySelectorAll('input[name="enrGender"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[name="enrCourse"]').forEach(c => c.checked = false);
+  document.getElementById('enrollError').style.display = 'none';
+  document.getElementById('enrollError').textContent = '';
+  document.getElementById('enrollForm').style.display = 'block';
+  document.getElementById('enrollSuccess').style.display = 'none';
+  const btn = document.getElementById('enrollSubmit');
+  btn.disabled = false;
+  btn.textContent = 'Submit Enrollment';
 }
 document.getElementById('enrollModal').addEventListener('click', function(e) {
   if (e.target === this) closeEnroll();
@@ -1065,18 +1082,38 @@ async function submitEnroll() {
   btn.disabled = true;
   btn.textContent = 'Submitting…';
 
+  // ⚠️ REPLACE THIS URL with your actual Google Apps Script Web App URL
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUlSwPl7Cq0XxhalbzRWAoliEMXed-fArOspOAew-M-bJGwvi8eOGuuPQIN9moS25szw/exec';
+
   try {
-    const res = await fetch('/.netlify/functions/enroll', {
+    const formData = new FormData();
+    formData.append('fullName', fullName);
+    formData.append('gender', gender);
+    formData.append('city', city);
+    formData.append('whatsapp', whatsapp);
+    formData.append('courses', courses.join(', '));
+    formData.append('timestamp', new Date().toLocaleString('en-PK', { timeZone: 'Asia/Karachi' }));
+
+    const res = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fullName, gender, city, whatsapp, courses }),
+      body: formData,
     });
-    const json = await res.json();
-    if (json.success) {
+
+    const text = await res.text();
+    // Google Apps Script returns plain text or JSON — handle both
+    let success = false;
+    try {
+      const json = JSON.parse(text);
+      success = json.result === 'success' || json.success === true;
+    } catch {
+      success = res.ok; // fallback: if HTTP 200, treat as success
+    }
+
+    if (success) {
       document.getElementById('enrollForm').style.display = 'none';
       document.getElementById('enrollSuccess').style.display = 'block';
     } else {
-      throw new Error(json.error || 'Submission failed');
+      throw new Error('Submission failed');
     }
   } catch (err) {
     errEl.textContent = 'Something went wrong. Please try again or message us on WhatsApp.';
